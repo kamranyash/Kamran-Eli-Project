@@ -6,8 +6,11 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors, spacing, borderRadius, typography } from '../theme';
 import { MOCK_BOOKINGS } from '../data/mockBookings';
+import type { CalendarStackParamList } from '../navigation/AppTabs';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 type ViewMode = 'Month' | 'Week' | 'Day';
@@ -27,11 +30,19 @@ function getDateKey(date: Date): string {
   return `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
+type CalendarNav = NativeStackNavigationProp<CalendarStackParamList, 'Calendar'>;
+
 export function CalendarScreen() {
+  const navigation = useNavigation<CalendarNav>();
   const [viewDate, setViewDate] = useState(new Date(2026, 0, 1));
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('Month');
   const [showDropdown, setShowDropdown] = useState(false);
+
+  const openDayDetail = (date: Date) => {
+    setSelectedDay(date);
+    navigation.navigate('DayDetail', { date: getDateKey(date) });
+  };
 
   const eventsByDate = useMemo(() => {
     const map: Record<string, { title: string; time: string }[]> = {};
@@ -219,7 +230,7 @@ export function CalendarScreen() {
               <TouchableOpacity
                 key={key}
                 style={[styles.cell, isSelected && styles.cellSelected]}
-                onPress={() => setSelectedDay(cell)}
+                onPress={() => openDayDetail(cell)}
               >
                 <View
                   style={[
@@ -250,7 +261,7 @@ export function CalendarScreen() {
               <TouchableOpacity
                 key={key}
                 style={[styles.cell, styles.cellWeek, isSelected && styles.cellSelected]}
-                onPress={() => setSelectedDay(cell)}
+                onPress={() => openDayDetail(cell)}
               >
                 <View
                   style={[
@@ -273,7 +284,7 @@ export function CalendarScreen() {
         {viewMode === 'Day' && (
           <TouchableOpacity
             style={[styles.cell, styles.cellDay]}
-            onPress={() => setSelectedDay(viewDate)}
+            onPress={() => openDayDetail(viewDate)}
           >
             <Text style={styles.dayNumDay}>{viewDate.getDate()}</Text>
             <Text style={styles.daySubtext}>

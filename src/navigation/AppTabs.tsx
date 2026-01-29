@@ -7,6 +7,7 @@ import { HomeScreen } from '../screens/HomeScreen';
 import { ManageBookingScreen } from '../screens/ManageBookingScreen';
 import { CreateBookingScreen } from '../screens/CreateBookingScreen';
 import { CalendarScreen } from '../screens/CalendarScreen';
+import { DayDetailScreen } from '../screens/DayDetailScreen';
 import { MessagesScreen } from '../screens/MessagesScreen';
 import { ChatThreadScreen } from '../screens/ChatThreadScreen';
 import { NewChatScreen } from '../screens/NewChatScreen';
@@ -35,7 +36,11 @@ export type PaymentsStackParamList = {
 };
 
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
-const CalendarStack = createNativeStackNavigator<{ Calendar: undefined }>();
+export type CalendarStackParamList = {
+  Calendar: undefined;
+  DayDetail: { date: string };
+};
+const CalendarStack = createNativeStackNavigator<CalendarStackParamList>();
 const MessagesStack = createNativeStackNavigator<MessagesStackParamList>();
 const JobListingsStack = createNativeStackNavigator<{ JobListings: undefined }>();
 const PaymentsStack = createNativeStackNavigator<PaymentsStackParamList>();
@@ -88,6 +93,21 @@ function CalendarStackScreen() {
         name="Calendar"
         component={CalendarScreen}
         options={{ headerShown: false }}
+      />
+      <CalendarStack.Screen
+        name="DayDetail"
+        component={DayDetailScreen}
+        options={({ route }) => {
+          const dateStr = route.params?.date;
+          const title = dateStr
+            ? (() => {
+                const [y, m, d] = dateStr.split('-').map(Number);
+                const d2 = new Date(y, (m ?? 1) - 1, d ?? 1);
+                return d2.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+              })()
+            : 'Day';
+          return { title, headerBackTitle: 'Back' };
+        }}
       />
     </CalendarStack.Navigator>
   );
