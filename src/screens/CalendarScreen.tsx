@@ -6,8 +6,7 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, spacing, borderRadius, typography } from '../theme';
 import { MOCK_BOOKINGS } from '../data/mockBookings';
 import type { CalendarStackParamList } from '../navigation/AppTabs';
@@ -30,10 +29,9 @@ function getDateKey(date: Date): string {
   return `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
-type CalendarNav = NativeStackNavigationProp<CalendarStackParamList, 'Calendar'>;
+type Props = NativeStackScreenProps<CalendarStackParamList, 'Calendar'>;
 
-export function CalendarScreen() {
-  const navigation = useNavigation<CalendarNav>();
+export function CalendarScreen({ navigation }: Props) {
   const [viewDate, setViewDate] = useState(new Date(2026, 0, 1));
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('Month');
@@ -41,7 +39,7 @@ export function CalendarScreen() {
 
   const openDayDetail = (date: Date) => {
     setSelectedDay(date);
-    navigation.navigate('DayDetail', { date: getDateKey(date) });
+    navigation.push('DayDetail', { date: getDateKey(date) });
   };
 
   const eventsByDate = useMemo(() => {
