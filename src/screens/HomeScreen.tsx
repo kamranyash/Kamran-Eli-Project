@@ -12,7 +12,6 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors, spacing, typography } from '../theme';
 import { BookingCard, IconButton } from '../components';
 import { MOCK_BOOKINGS } from '../data/mockBookings';
-import { MOCK_BUSINESSES } from '../data/mockBusinesses';
 import { useNotifications } from '../context/NotificationsContext';
 import { setCalendarOpenedFromHome } from '../navigation/calendarFromHome';
 import { setMessagesOpenedFromHome } from '../navigation/messagesFromHome';
@@ -61,13 +60,6 @@ export function HomeScreen() {
     setCalendarOpenedFromHome(true);
     (navigation.getParent() as any)?.navigate('Calendar');
   }, [navigation]);
-
-  const handleBusinessPress = useCallback(
-    (businessId: string) => {
-      navigation.navigate('BusinessProfile', { businessId });
-    },
-    [navigation]
-  );
 
   const handleMessages = useCallback(() => {
     setMessagesOpenedFromHome(true);
@@ -122,24 +114,6 @@ export function HomeScreen() {
           <Text style={styles.profileHint}>Tap the profile icon above to open your account</Text>
         </View>
       </View>
-
-      <Text style={styles.sectionTitle}>Featured businesses</Text>
-      <Text style={styles.sectionHint}>Tap a business to view their profile</Text>
-      {MOCK_BUSINESSES.map((business) => (
-        <TouchableOpacity
-          key={business.id}
-          style={styles.businessRow}
-          onPress={() => handleBusinessPress(business.id)}
-          activeOpacity={0.7}
-        >
-          <View style={styles.businessAvatar} />
-          <View style={styles.businessInfo}>
-            <Text style={styles.businessNameText}>{business.name}</Text>
-            <Text style={styles.businessCategory}>{business.category} · {business.location}</Text>
-          </View>
-          <Text style={styles.businessChevron}>›</Text>
-        </TouchableOpacity>
-      ))}
 
       <Text style={styles.sectionTitle}>Next Bookings:</Text>
       {bookings.map((booking) => (
@@ -268,45 +242,6 @@ const styles = StyleSheet.create({
     ...typography.h2,
     color: colors.text,
     marginBottom: spacing.sm,
-  },
-  sectionHint: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-    marginBottom: spacing.md,
-  },
-  businessRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.card,
-    padding: spacing.md,
-    borderRadius: 12,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  businessAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.gray[300],
-    marginRight: spacing.md,
-  },
-  businessInfo: {
-    flex: 1,
-  },
-  businessNameText: {
-    ...typography.h3,
-    color: colors.text,
-    marginBottom: 2,
-  },
-  businessCategory: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-  },
-  businessChevron: {
-    fontSize: 24,
-    color: colors.textSecondary,
-    fontWeight: '300',
   },
   fab: {
     position: 'absolute',
