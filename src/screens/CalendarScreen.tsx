@@ -168,7 +168,7 @@ export function CalendarScreen() {
         <View style={styles.pageHeader}>
           <View style={styles.pageHeaderRow}>
             <TouchableOpacity onPress={handleBackToHome} style={styles.backTouchable} activeOpacity={0.7}>
-              <Text style={styles.backChevron}>‹</Text>
+              <Text style={styles.backChevron}>←</Text>
             </TouchableOpacity>
             <Text style={styles.pageHeaderTitle}>Calendar</Text>
           </View>
@@ -352,10 +352,10 @@ const styles = StyleSheet.create({
     paddingRight: spacing.sm,
   },
   backChevron: {
-    fontSize: 28,
+    fontSize: 22,
     color: colors.text,
     fontWeight: '400',
-    marginRight: 2,
+    marginRight: 4,
   },
   backLabel: {
     ...typography.body,
