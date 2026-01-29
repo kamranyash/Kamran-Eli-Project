@@ -54,7 +54,7 @@ export function MessagesScreen() {
         <View style={styles.pageHeader}>
           <View style={styles.pageHeaderRow}>
             <TouchableOpacity onPress={handleBackToHome} style={styles.backTouchable} activeOpacity={0.7}>
-              <Text style={styles.backArrow}>←</Text>
+              <Text style={styles.backChevron}>‹</Text>
             </TouchableOpacity>
             <Text style={styles.pageHeaderTitle}>Messages</Text>
           </View>
@@ -122,13 +122,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backTouchable: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: spacing.sm,
     paddingRight: spacing.sm,
   },
-  backArrow: {
-    fontSize: 24,
+  backChevron: {
+    fontSize: 28,
     color: colors.text,
     fontWeight: '400',
+    marginRight: 2,
+  },
+  backLabel: {
+    ...typography.body,
+    color: colors.text,
   },
   pageHeaderTitle: {
     ...typography.h3,
