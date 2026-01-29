@@ -10,24 +10,28 @@ import { colors, spacing, borderRadius, typography } from '../theme';
 import { MOCK_BOOKINGS } from '../data/mockBookings';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+type ViewMode = 'Month' | 'Week' | 'Day';
+
+function getWeekStart(d: Date): Date {
+  const copy = new Date(d);
+  const day = copy.getDay();
+  copy.setDate(copy.getDate() - day);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+}
+
+function getDateKey(date: Date): string {
+  const y = date.getFullYear();
+  const m = date.getMonth() + 1;
+  const day = date.getDate();
+  return `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
 
 export function CalendarScreen() {
-  const [currentMonth, setCurrentMonth] = useState(new Date(2026, 0, 1));
+  const [viewDate, setViewDate] = useState(new Date(2026, 0, 1));
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
-  const [timeSpan, setTimeSpan] = useState<'Week' | 'Month' | 'Year'>('Month');
-  const [showTimeSpanDropdown, setShowTimeSpanDropdown] = useState(false);
-
-  const { days, startOffset } = useMemo(() => {
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-    const first = new Date(year, month, 1);
-    const last = new Date(year, month + 1, 0);
-    const startOffset = first.getDay();
-    const numDays = last.getDate();
-    const days: (number | null)[] = Array(startOffset).fill(null);
-    for (let d = 1; d <= numDays; d++) days.push(d);
-    return { days, startOffset };
-  }, [currentMonth]);
+  const [viewMode, setViewMode] = useState<ViewMode>('Month');
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const eventsByDate = useMemo(() => {
     const map: Record<string, { title: string; time: string }[]> = {};
@@ -40,62 +44,138 @@ export function CalendarScreen() {
       });
     });
     const d = new Date(2026, 0, 15);
-    const key2 = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const key2 = getDateKey(d);
     if (!map[key2]) map[key2] = [];
     map[key2].push({ title: 'Gardening 1-2pm', time: '1:00 PM - 2:00 PM' });
     return map;
   }, []);
 
-  const getDateKey = (day: number) => {
-    const y = currentMonth.getFullYear();
-    const m = currentMonth.getMonth() + 1;
-    return `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-  };
+  const { cells, headerLabel } = useMemo(() => {
+    if (viewMode === 'Month') {
+      const year = viewDate.getFullYear();
+      const month = viewDate.getMonth();
+      const first = new Date(year, month, 1);
+      const last = new Date(year, month + 1, 0);
+      const startOffset = first.getDay();
+      const numDays = last.getDate();
+      const days: (number | null)[] = Array(startOffset).fill(null);
+      for (let d = 1; d <= numDays; d++) days.push(d);
+      const monthYear = viewDate.toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric',
+      });
+      return {
+        cells: days.map((day) => (day === null ? null : new Date(year, month, day))),
+        headerLabel: monthYear,
+        isMonth: true,
+      };
+    }
+    if (viewMode === 'Week') {
+      const start = getWeekStart(viewDate);
+      const cells: Date[] = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        cells.push(d);
+      }
+      const end = cells[6];
+      const label = `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+      return { cells, headerLabel: label, isMonth: false };
+    }
+    const dayLabel = viewDate.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    });
+    return {
+      cells: [viewDate],
+      headerLabel: dayLabel,
+      isMonth: false,
+    };
+  }, [viewDate, viewMode]);
 
-  const prevMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+  const goPrev = () => {
+    if (viewMode === 'Month') {
+      setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1));
+    } else if (viewMode === 'Week') {
+      const d = new Date(viewDate);
+      d.setDate(d.getDate() - 7);
+      setViewDate(d);
+    } else {
+      const d = new Date(viewDate);
+      d.setDate(d.getDate() - 1);
+      setViewDate(d);
+    }
     setSelectedDay(null);
   };
 
-  const nextMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+  const goNext = () => {
+    if (viewMode === 'Month') {
+      setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1));
+    } else if (viewMode === 'Week') {
+      const d = new Date(viewDate);
+      d.setDate(d.getDate() + 7);
+      setViewDate(d);
+    } else {
+      const d = new Date(viewDate);
+      d.setDate(d.getDate() + 1);
+      setViewDate(d);
+    }
     setSelectedDay(null);
   };
 
-  const selectedEvents = selectedDay
-    ? eventsByDate[getDateKey(selectedDay.getDate())] || []
-    : [];
+  const selectedEvents =
+    selectedDay !== null
+      ? eventsByDate[getDateKey(selectedDay)] || []
+      : viewMode === 'Day'
+        ? eventsByDate[getDateKey(viewDate)] || []
+        : [];
+
+  const selectedEventsLabel =
+    viewMode === 'Day'
+      ? viewDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' events'
+      : selectedDay
+        ? `${selectedDay.getMonth() + 1}/${selectedDay.getDate()} events`
+        : 'Tap a day to see events';
+
+  const showWeekRow = viewMode === 'Month' || viewMode === 'Week';
+  const gridCells: Date[] =
+    viewMode === 'Week' ? (cells as Date[]) : viewMode === 'Day' ? (cells as Date[]) : [];
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={prevMonth} style={styles.chevron}>
+        <TouchableOpacity onPress={goPrev} style={styles.chevron}>
           <Text style={styles.chevronText}>‹</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.timeSpan}
-          onPress={() => setShowTimeSpanDropdown(!showTimeSpanDropdown)}
-        >
-          <Text style={styles.timeSpanText}>Time Span (drop down menu)</Text>
-          <Text style={styles.dropdownArrow}>▼</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={nextMonth} style={styles.chevron}>
+        <View style={styles.headerCenter}>
+          <Text style={styles.monthYear}>{headerLabel}</Text>
+          <TouchableOpacity
+            style={styles.timeSpan}
+            onPress={() => setShowDropdown(!showDropdown)}
+          >
+            <Text style={styles.timeSpanText}>{viewMode}</Text>
+            <Text style={styles.dropdownArrow}>▼</Text>
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity onPress={goNext} style={styles.chevron}>
           <Text style={styles.chevronText}>›</Text>
         </TouchableOpacity>
       </View>
 
-      {showTimeSpanDropdown && (
+      {showDropdown && (
         <View style={styles.dropdown}>
-          {(['Week', 'Month', 'Year'] as const).map((span) => (
+          {(['Month', 'Week', 'Day'] as const).map((mode) => (
             <TouchableOpacity
-              key={span}
+              key={mode}
               onPress={() => {
-                setTimeSpan(span);
-                setShowTimeSpanDropdown(false);
+                setViewMode(mode);
+                setShowDropdown(false);
               }}
               style={styles.dropdownItem}
             >
-              <Text style={styles.dropdownItemText}>{span}</Text>
+              <Text style={styles.dropdownItemText}>{mode}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -108,59 +188,106 @@ export function CalendarScreen() {
         <Text style={styles.legendText}>red : booked</Text>
       </View>
 
-      <View style={styles.weekRow}>
-        {DAYS.map((d) => (
-          <Text key={d} style={styles.weekDay}>
-            {d}
-          </Text>
-        ))}
-      </View>
-      <View style={styles.grid}>
-        {days.map((day, i) => {
-          if (day === null) {
-            return <View key={`empty-${i}`} style={styles.cell} />;
-          }
-          const key = getDateKey(day);
-          const events = eventsByDate[key] || [];
-          const isBooked = events.length > 0;
-          const isSelected =
-            selectedDay &&
-            selectedDay.getDate() === day &&
-            selectedDay.getMonth() === currentMonth.getMonth();
-          return (
-            <TouchableOpacity
-              key={key}
-              style={[styles.cell, isSelected && styles.cellSelected]}
-              onPress={() =>
-                setSelectedDay(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day))
-              }
-            >
-              <View
-                style={[
-                  styles.dayDot,
-                  isBooked ? styles.dayDotBooked : styles.dayDotEmpty,
-                ]}
-              />
-              {events.length > 0 && events.length <= 3 && (
-                <Text style={styles.dayLabel} numberOfLines={1}>
-                  {events[0].title}
-                </Text>
-              )}
-              {events.length > 3 && (
-                <Text style={styles.dayLabel}>3+</Text>
-              )}
-              <Text style={styles.dayNum}>{day}</Text>
-            </TouchableOpacity>
-          );
-        })}
+      {showWeekRow && (
+        <View style={styles.weekRow}>
+          {DAYS.map((d) => (
+            <Text key={d} style={styles.weekDay}>
+              {d}
+            </Text>
+          ))}
+        </View>
+      )}
+
+      <View
+        style={[
+          styles.grid,
+          viewMode === 'Day' && styles.gridDay,
+          viewMode === 'Week' && styles.gridWeek,
+        ]}
+      >
+        {viewMode === 'Month' &&
+          cells.map((cell, i) => {
+            if (cell === null) {
+              return <View key={`empty-${i}`} style={styles.cell} />;
+            }
+            const key = getDateKey(cell);
+            const events = eventsByDate[key] || [];
+            const isBooked = events.length > 0;
+            const isSelected =
+              selectedDay !== null && getDateKey(selectedDay) === key;
+            return (
+              <TouchableOpacity
+                key={key}
+                style={[styles.cell, isSelected && styles.cellSelected]}
+                onPress={() => setSelectedDay(cell)}
+              >
+                <View
+                  style={[
+                    styles.dayDot,
+                    isBooked ? styles.dayDotBooked : styles.dayDotEmpty,
+                  ]}
+                />
+                {events.length > 0 && events.length <= 3 && (
+                  <Text style={styles.dayLabel} numberOfLines={1}>
+                    {events[0].title}
+                  </Text>
+                )}
+                {events.length > 3 && (
+                  <Text style={styles.dayLabel}>3+</Text>
+                )}
+                <Text style={styles.dayNum}>{cell.getDate()}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        {viewMode === 'Week' &&
+          gridCells.map((cell: Date) => {
+            const key = getDateKey(cell);
+            const events = eventsByDate[key] || [];
+            const isBooked = events.length > 0;
+            const isSelected =
+              selectedDay !== null && getDateKey(selectedDay) === key;
+            return (
+              <TouchableOpacity
+                key={key}
+                style={[styles.cell, styles.cellWeek, isSelected && styles.cellSelected]}
+                onPress={() => setSelectedDay(cell)}
+              >
+                <View
+                  style={[
+                    styles.dayDot,
+                    isBooked ? styles.dayDotBooked : styles.dayDotEmpty,
+                  ]}
+                />
+                {events.length > 0 && events.length <= 2 && (
+                  <Text style={styles.dayLabelWeek} numberOfLines={1}>
+                    {events[0].title}
+                  </Text>
+                )}
+                {events.length > 2 && (
+                  <Text style={styles.dayLabelWeek}>{events.length}+</Text>
+                )}
+                <Text style={styles.dayNum}>{cell.getDate()}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        {viewMode === 'Day' && (
+          <TouchableOpacity
+            style={[styles.cell, styles.cellDay]}
+            onPress={() => setSelectedDay(viewDate)}
+          >
+            <Text style={styles.dayNumDay}>{viewDate.getDate()}</Text>
+            <Text style={styles.daySubtext}>
+              {viewDate.toLocaleDateString('en-US', { weekday: 'long' })}
+            </Text>
+            {(eventsByDate[getDateKey(viewDate)] || []).length > 0 && (
+              <View style={[styles.dayDot, styles.dayDotBooked]} />
+            )}
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.eventsSection}>
-        <Text style={styles.eventsTitle}>
-          {selectedDay
-            ? `${selectedDay.getMonth() + 1}/${selectedDay.getDate()} events`
-            : 'Tap a day to see events'}
-        </Text>
+        <Text style={styles.eventsTitle}>{selectedEventsLabel}</Text>
         {selectedEvents.map((ev, i) => (
           <View key={i} style={styles.eventCard}>
             <Text style={styles.eventTitle}>{ev.title}</Text>
@@ -187,6 +314,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: spacing.md,
   },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  monthYear: {
+    ...typography.title,
+    color: colors.text,
+    marginBottom: spacing.xs,
+  },
   chevron: {
     padding: spacing.sm,
   },
@@ -201,8 +338,8 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   timeSpanText: {
-    ...typography.h3,
-    color: colors.text,
+    ...typography.bodySmall,
+    color: colors.textSecondary,
   },
   dropdownArrow: {
     fontSize: 12,
@@ -262,6 +399,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
+  gridWeek: {
+    flexWrap: 'nowrap',
+  },
+  gridDay: {
+    flexWrap: 'nowrap',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   cell: {
     width: '14.28%',
     aspectRatio: 1,
@@ -271,6 +416,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.card,
+  },
+  cellWeek: {
+    flex: 1,
+    minWidth: 0,
+    aspectRatio: 1,
+  },
+  cellDay: {
+    width: '100%',
+    maxWidth: 200,
+    aspectRatio: 1,
+    justifyContent: 'center',
   },
   cellSelected: {
     backgroundColor: colors.gray[200],
@@ -295,10 +451,26 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
     textAlign: 'center',
   },
+  dayLabelWeek: {
+    fontSize: 10,
+    color: colors.textSecondary,
+    maxWidth: '100%',
+    textAlign: 'center',
+  },
   dayNum: {
     ...typography.caption,
     color: colors.text,
     marginTop: 2,
+  },
+  dayNumDay: {
+    fontSize: 48,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  daySubtext: {
+    ...typography.body,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
   },
   eventsSection: {
     marginTop: spacing.xl,

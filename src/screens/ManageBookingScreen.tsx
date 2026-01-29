@@ -80,7 +80,6 @@ export function ManageBookingScreen() {
             Payment: {booking.status === 'incomplete' ? 'Pending' : booking.status} ($
             {booking.price})
           </Text>
-          <Text style={styles.paymentHint}>When click yellow, take to payment page</Text>
         </TouchableOpacity>
       </View>
 

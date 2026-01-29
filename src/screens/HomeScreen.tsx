@@ -12,6 +12,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors, spacing, typography } from '../theme';
 import { BookingCard, IconButton } from '../components';
 import { MOCK_BOOKINGS } from '../data/mockBookings';
+import { useNotifications } from '../context/NotificationsContext';
 import type { Booking } from '../data/mockBookings';
 
 const BUSINESS_NAME = 'Shayfer Gardening LLC';
@@ -20,10 +21,13 @@ type HomeStackParamList = {
   Home: undefined;
   ManageBooking: { booking: Booking };
   CreateBooking: undefined;
+  Notifications: undefined;
+  Account: undefined;
 };
 
 export function HomeScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
+  const { unreadCount } = useNotifications();
   const [bookings] = useState(MOCK_BOOKINGS);
 
   const handleSwitchToPersonal = useCallback(() => {
@@ -31,8 +35,8 @@ export function HomeScreen() {
   }, []);
 
   const handleOpenProfile = useCallback(() => {
-    Alert.alert('Profile', 'Profile screen (placeholder)');
-  }, []);
+    navigation.navigate('Account');
+  }, [navigation]);
 
   const handleBookingPress = useCallback(
     (booking: Booking) => {
@@ -43,6 +47,14 @@ export function HomeScreen() {
 
   const handleCreateBooking = useCallback(() => {
     navigation.navigate('CreateBooking');
+  }, [navigation]);
+
+  const handleNotifications = useCallback(() => {
+    navigation.navigate('Notifications');
+  }, [navigation]);
+
+  const handleCalendar = useCallback(() => {
+    (navigation.getParent() as any)?.navigate('Calendar');
   }, [navigation]);
 
   return (
@@ -63,10 +75,14 @@ export function HomeScreen() {
         </View>
         <View style={styles.topRight}>
           <IconButton
-            onPress={() => {}}
+            onPress={handleCalendar}
             icon={<Text style={styles.iconText}>📅</Text>}
           />
-          <IconButton onPress={() => {}} icon={<Text style={styles.iconText}>🔔</Text>} badge={1} />
+          <IconButton
+            onPress={handleNotifications}
+            icon={<Text style={styles.iconText}>🔔</Text>}
+            badge={unreadCount > 0 ? unreadCount : undefined}
+          />
           <IconButton onPress={() => {}} icon={<Text style={styles.iconText}>💬</Text>} />
         </View>
       </View>
@@ -75,7 +91,9 @@ export function HomeScreen() {
         <View style={styles.avatar} />
         <View style={styles.accountText}>
           <Text style={styles.businessName}>{BUSINESS_NAME}</Text>
-          <Text style={styles.notifications}>4 new notifications</Text>
+          <Text style={styles.notifications}>
+            {unreadCount === 0 ? 'No new notifications' : `${unreadCount} new notification${unreadCount === 1 ? '' : 's'}`}
+          </Text>
           <TouchableOpacity onPress={handleOpenProfile}>
             <Text style={styles.profileLink}>Click to open profile</Text>
           </TouchableOpacity>

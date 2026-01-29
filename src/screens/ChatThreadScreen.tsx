@@ -21,7 +21,8 @@ type ChatThreadParams = {
 export function ChatThreadScreen() {
   const navigation = useNavigation();
   const route = useRoute<RouteProp<ChatThreadParams, 'ChatThread'>>();
-  const { threadId, username } = route.params;
+  const params = route.params ?? { threadId: '1', username: 'Chat' };
+  const { threadId, username } = params;
   const initialMessages = getMockMessagesForThread(threadId);
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState('');

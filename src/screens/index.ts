@@ -9,3 +9,5 @@ export { ChatThreadScreen } from './ChatThreadScreen';
 export { NewChatScreen } from './NewChatScreen';
 export { JobListingsScreen } from './JobListingsScreen';
 export { PaymentsScreen } from './PaymentsScreen';
+export { NotificationsScreen } from './NotificationsScreen';
+export { AccountScreen } from './AccountScreen';

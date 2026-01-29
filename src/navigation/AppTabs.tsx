@@ -12,12 +12,16 @@ import { ChatThreadScreen } from '../screens/ChatThreadScreen';
 import { NewChatScreen } from '../screens/NewChatScreen';
 import { JobListingsScreen } from '../screens/JobListingsScreen';
 import { PaymentsScreen } from '../screens/PaymentsScreen';
+import { NotificationsScreen } from '../screens/NotificationsScreen';
+import { AccountScreen } from '../screens/AccountScreen';
 import type { Booking } from '../data/mockBookings';
 
 export type HomeStackParamList = {
   Home: undefined;
   ManageBooking: { booking: Booking };
   CreateBooking: undefined;
+  Notifications: undefined;
+  Account: undefined;
 };
 
 export type MessagesStackParamList = {
@@ -62,6 +66,16 @@ function HomeStackScreen() {
         name="CreateBooking"
         component={CreateBookingScreen}
         options={{ title: 'Create Booking', headerBackTitle: 'Back' }}
+      />
+      <HomeStack.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{ title: 'Notifications', headerBackTitle: 'Back' }}
+      />
+      <HomeStack.Screen
+        name="Account"
+        component={AccountScreen}
+        options={{ title: 'Account', headerBackTitle: 'Back' }}
       />
     </HomeStack.Navigator>
   );

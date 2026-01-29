@@ -1,19 +1,27 @@
 import React, { useState } from 'react';
 import {
   View,
+  Text,
   TextInput,
   StyleSheet,
   FlatList,
   TouchableOpacity,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors, spacing, borderRadius, typography } from '../theme';
 import { ThreadRow } from '../components';
 import { MOCK_THREADS } from '../data/mockThreads';
 import type { Thread } from '../data/mockThreads';
 
+type MessagesStackParamList = {
+  Messages: undefined;
+  ChatThread: { threadId: string; username: string };
+  NewChat: undefined;
+};
+
 export function MessagesScreen() {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NativeStackNavigationProp<MessagesStackParamList>>();
   const [search, setSearch] = useState('');
   const threads = MOCK_THREADS.filter((t) =>
     t.username.toLowerCase().includes(search.toLowerCase())
@@ -32,7 +40,11 @@ export function MessagesScreen() {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Messages</Text>
       <View style={styles.searchRow}>
+        <View style={styles.searchIconWrap}>
+          <Text style={styles.searchIcon}>🔍</Text>
+        </View>
         <TextInput
           style={styles.searchInput}
           placeholder="Search messages"
@@ -40,7 +52,6 @@ export function MessagesScreen() {
           value={search}
           onChangeText={setSearch}
         />
-        <Text style={styles.searchIcon}>🔍</Text>
       </View>
       <FlatList
         data={threads}
@@ -48,7 +59,15 @@ export function MessagesScreen() {
         renderItem={({ item }) => (
           <ThreadRow thread={item} onPress={() => handleThreadPress(item)} />
         )}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[
+          styles.list,
+          threads.length === 0 && styles.listEmpty,
+        ]}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Text style={styles.emptyText}>No conversations match your search.</Text>
+          </View>
+        }
         showsVerticalScrollIndicator={false}
       />
       <TouchableOpacity
@@ -71,11 +90,30 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  title: {
+    ...typography.h1,
+    color: colors.text,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
+  },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
     backgroundColor: colors.background,
+  },
+  searchIconWrap: {
+    position: 'absolute',
+    left: spacing.md + 12,
+    zIndex: 1,
+    width: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  searchIcon: {
+    fontSize: 18,
   },
   searchInput: {
     flex: 1,
@@ -83,19 +121,25 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.full,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    paddingLeft: 40,
+    paddingLeft: 44,
     fontSize: 16,
     color: colors.text,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  searchIcon: {
-    position: 'absolute',
-    left: spacing.lg,
-    fontSize: 18,
-  },
   list: {
     paddingBottom: 100,
+  },
+  listEmpty: {
+    flexGrow: 1,
+  },
+  empty: {
+    padding: spacing.xl,
+    alignItems: 'center',
+  },
+  emptyText: {
+    ...typography.body,
+    color: colors.textSecondary,
   },
   fab: {
     position: 'absolute',

@@ -5,17 +5,22 @@ import { colors, spacing } from '../theme';
 interface IconButtonProps {
   onPress: () => void;
   icon: React.ReactNode;
+  /** Show red dot with this number. Omit or pass 0 to hide the badge. */
   badge?: number | string;
   style?: ViewStyle;
 }
 
 export function IconButton({ onPress, icon, badge, style }: IconButtonProps) {
+  const showBadge = badge != null && badge !== 0 && badge !== '0';
+
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.7} style={[styles.wrapper, style]}>
       <View style={styles.iconWrap}>{icon}</View>
-      {badge != null && (
+      {showBadge && (
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>{String(badge)}</Text>
+          <Text style={styles.badgeText} numberOfLines={1}>
+            {Number(badge) > 99 ? '99+' : String(badge)}
+          </Text>
         </View>
       )}
     </TouchableOpacity>
