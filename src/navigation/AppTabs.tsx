@@ -15,6 +15,7 @@ import { JobListingsScreen } from '../screens/JobListingsScreen';
 import { PaymentsScreen } from '../screens/PaymentsScreen';
 import { NotificationsScreen } from '../screens/NotificationsScreen';
 import { AccountScreen } from '../screens/AccountScreen';
+import { BusinessProfileScreen } from '../screens/BusinessProfileScreen';
 import type { Booking } from '../data/mockBookings';
 
 export type HomeStackParamList = {
@@ -23,6 +24,7 @@ export type HomeStackParamList = {
   CreateBooking: undefined;
   Notifications: undefined;
   Account: undefined;
+  BusinessProfile: { businessId: string };
 };
 
 export type MessagesStackParamList = {
@@ -81,6 +83,14 @@ function HomeStackScreen() {
         name="Account"
         component={AccountScreen}
         options={{ title: 'Account', headerBackTitle: 'Back' }}
+      />
+      <HomeStack.Screen
+        name="BusinessProfile"
+        component={BusinessProfileScreen}
+        options={({ route }) => ({
+          title: 'Business',
+          headerBackTitle: 'Back',
+        })}
       />
     </HomeStack.Navigator>
   );

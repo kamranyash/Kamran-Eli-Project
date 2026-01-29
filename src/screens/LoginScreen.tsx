@@ -60,6 +60,7 @@ export function LoginScreen({ onLoginSuccess, onNavigateSignUp }: LoginScreenPro
 
         <PrimaryButton title="Login" onPress={handleLogin} style={styles.button} />
 
+        <Text style={styles.noAccount}>Don&apos;t have an account?</Text>
         <TouchableOpacity onPress={onNavigateSignUp} style={styles.linkWrap}>
           <Text style={styles.link}>Create account</Text>
         </TouchableOpacity>
@@ -105,6 +106,12 @@ const styles = StyleSheet.create({
   button: {
     marginTop: spacing.sm,
     marginBottom: spacing.lg,
+  },
+  noAccount: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.xs,
   },
   linkWrap: {
     alignSelf: 'center',

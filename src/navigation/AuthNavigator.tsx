@@ -3,10 +3,14 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LoginScreen } from '../screens/LoginScreen';
 import { SignUpScreen } from '../screens/SignUpScreen';
+import { CreateAccountChoiceScreen } from '../screens/CreateAccountChoiceScreen';
+import { SignUpBusinessScreen } from '../screens/SignUpBusinessScreen';
 
 export type AuthStackParamList = {
   Login: undefined;
   SignUp: undefined;
+  CreateAccountChoice: undefined;
+  SignUpBusiness: undefined;
 };
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
@@ -21,7 +25,7 @@ export function AuthNavigator({ onLoginSuccess }: AuthNavigatorProps) {
   ) => (
     <LoginScreen
       onLoginSuccess={onLoginSuccess}
-      onNavigateSignUp={() => props.navigation.navigate('SignUp')}
+      onNavigateSignUp={() => props.navigation.navigate('CreateAccountChoice')}
     />
   );
 
@@ -34,6 +38,25 @@ export function AuthNavigator({ onLoginSuccess }: AuthNavigatorProps) {
     />
   );
 
+  const CreateAccountChoiceWithNav = (
+    props: NativeStackScreenProps<AuthStackParamList, 'CreateAccountChoice'>
+  ) => (
+    <CreateAccountChoiceScreen
+      onSelectBusiness={() => props.navigation.navigate('SignUpBusiness')}
+      onSelectPersonal={() => {}}
+      onBack={() => props.navigation.goBack()}
+    />
+  );
+
+  const SignUpBusinessWithNav = (
+    props: NativeStackScreenProps<AuthStackParamList, 'SignUpBusiness'>
+  ) => (
+    <SignUpBusinessScreen
+      onSignUpSuccess={onLoginSuccess}
+      onBack={() => props.navigation.goBack()}
+    />
+  );
+
   return (
     <Stack.Navigator
       screenOptions={{
@@ -42,6 +65,11 @@ export function AuthNavigator({ onLoginSuccess }: AuthNavigatorProps) {
       }}
     >
       <Stack.Screen name="Login" component={LoginScreenWithNav} />
+      <Stack.Screen
+        name="CreateAccountChoice"
+        component={CreateAccountChoiceWithNav}
+      />
+      <Stack.Screen name="SignUpBusiness" component={SignUpBusinessWithNav} />
       <Stack.Screen name="SignUp" component={SignUpScreenWithNav} />
     </Stack.Navigator>
   );
