@@ -7,20 +7,13 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { colors, spacing, borderRadius, typography } from '../theme';
 import { PrimaryButton } from '../components';
 import type { PaymentMethod } from '../data/mockBookings';
 
-const PAYMENT_METHODS: PaymentMethod[] = [
-  'Venmo',
-  'Zelle',
-  'Card',
-  'Cash',
-  'Bank Transfer',
-];
+const PAYMENT_METHODS: PaymentMethod[] = ['Venmo', 'Zelle', 'Card', 'Cash'];
 
 export function CreateBookingScreen() {
   const navigation = useNavigation();
@@ -29,12 +22,16 @@ export function CreateBookingScreen() {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [price, setPrice] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Bank Transfer');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | ''>('');
   const [showPaymentDropdown, setShowPaymentDropdown] = useState(false);
 
   const handleSave = () => {
     if (!clientName.trim() || !address.trim() || !date.trim() || !time.trim() || !price.trim()) {
       Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+    if (!paymentMethod) {
+      Alert.alert('Error', 'Please select a payment method');
       return;
     }
     const numPrice = parseFloat(price);
@@ -108,7 +105,7 @@ export function CreateBookingScreen() {
         style={styles.dropdown}
         onPress={() => setShowPaymentDropdown(!showPaymentDropdown)}
       >
-        <Text style={styles.dropdownText}>{paymentMethod}</Text>
+        <Text style={styles.dropdownText}>{paymentMethod || '...'}</Text>
         <Text style={styles.dropdownArrow}>▼</Text>
       </TouchableOpacity>
       {showPaymentDropdown && (

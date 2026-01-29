@@ -11,4 +11,6 @@ export { NewChatScreen } from './NewChatScreen';
 export { JobListingsScreen } from './JobListingsScreen';
 export { PaymentsScreen } from './PaymentsScreen';
 export { NotificationsScreen } from './NotificationsScreen';
+export { NotificationDetailScreen } from './NotificationDetailScreen';
+export { ResetPasswordScreen } from './ResetPasswordScreen';
 export { AccountScreen } from './AccountScreen';

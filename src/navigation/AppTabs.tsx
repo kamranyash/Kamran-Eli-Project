@@ -16,15 +16,20 @@ import { PaymentsScreen } from '../screens/PaymentsScreen';
 import { NotificationsScreen } from '../screens/NotificationsScreen';
 import { AccountScreen } from '../screens/AccountScreen';
 import { BusinessProfileScreen } from '../screens/BusinessProfileScreen';
+import { NotificationDetailScreen } from '../screens/NotificationDetailScreen';
+import { ResetPasswordScreen } from '../screens/ResetPasswordScreen';
 import type { Booking } from '../data/mockBookings';
+import type { Notification } from '../data/mockNotifications';
 
 export type HomeStackParamList = {
   Home: undefined;
   ManageBooking: { booking: Booking };
   CreateBooking: undefined;
   Notifications: undefined;
+  NotificationDetail: { notification: Notification };
   Account: undefined;
   BusinessProfile: { businessId: string };
+  ResetPassword: undefined;
 };
 
 export type MessagesStackParamList = {
@@ -80,6 +85,11 @@ function HomeStackScreen() {
         options={{ title: 'Notifications', headerBackTitle: 'Back' }}
       />
       <HomeStack.Screen
+        name="NotificationDetail"
+        component={NotificationDetailScreen}
+        options={({ route }) => ({ title: route.params.notification.title, headerBackTitle: 'Back' })}
+      />
+      <HomeStack.Screen
         name="Account"
         component={AccountScreen}
         options={{ title: 'Account', headerBackTitle: 'Back' }}
@@ -91,6 +101,11 @@ function HomeStackScreen() {
           title: 'Business',
           headerBackTitle: 'Back',
         })}
+      />
+      <HomeStack.Screen
+        name="ResetPassword"
+        component={ResetPasswordScreen}
+        options={{ title: 'Reset password', headerBackTitle: 'Back' }}
       />
     </HomeStack.Navigator>
   );

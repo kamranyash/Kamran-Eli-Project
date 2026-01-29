@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,9 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { getAndClearCalendarOpenedFromHome } from '../navigation/calendarFromHome';
 import { colors, spacing, borderRadius, typography } from '../theme';
 import { MOCK_BOOKINGS } from '../data/mockBookings';
 import type { CalendarStackParamList } from '../navigation/AppTabs';
@@ -29,9 +31,9 @@ function getDateKey(date: Date): string {
   return `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
-type Props = NativeStackScreenProps<CalendarStackParamList, 'Calendar'>;
-
-export function CalendarScreen({ navigation }: Props) {
+export function CalendarScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<CalendarStackParamList>>();
+  const [showBackButton, setShowBackButton] = useState(false);
   const [viewDate, setViewDate] = useState(new Date(2026, 0, 1));
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('Month');
@@ -41,6 +43,14 @@ export function CalendarScreen({ navigation }: Props) {
     setSelectedDay(date);
     navigation.push('DayDetail', { date: getDateKey(date) });
   };
+
+  useEffect(() => {
+    setShowBackButton(getAndClearCalendarOpenedFromHome());
+  }, []);
+
+  const handleBackToHome = useCallback(() => {
+    (navigation.getParent() as any)?.navigate('Home');
+  }, [navigation]);
 
   const eventsByDate = useMemo(() => {
     const map: Record<string, { title: string; time: string }[]> = {};
@@ -154,6 +164,17 @@ export function CalendarScreen({ navigation }: Props) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      {showBackButton && (
+        <View style={styles.pageHeader}>
+          <View style={styles.pageHeaderRow}>
+            <TouchableOpacity onPress={handleBackToHome} style={styles.backTouchable} activeOpacity={0.7}>
+              <Text style={styles.backArrow}>←</Text>
+            </TouchableOpacity>
+            <Text style={styles.pageHeaderTitle}>Calendar</Text>
+          </View>
+          <View style={styles.pageHeaderLine} />
+        </View>
+      )}
       <View style={styles.header}>
         <TouchableOpacity onPress={goPrev} style={styles.chevron}>
           <Text style={styles.chevronText}>‹</Text>
@@ -316,6 +337,32 @@ const styles = StyleSheet.create({
   content: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
+  },
+  pageHeader: {
+    marginBottom: spacing.md,
+  },
+  pageHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backTouchable: {
+    paddingVertical: spacing.sm,
+    paddingRight: spacing.sm,
+  },
+  backArrow: {
+    fontSize: 24,
+    color: colors.text,
+    fontWeight: '400',
+  },
+  pageHeaderTitle: {
+    ...typography.h3,
+    color: colors.text,
+    flex: 1,
+  },
+  pageHeaderLine: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginTop: spacing.sm,
   },
   header: {
     flexDirection: 'row',

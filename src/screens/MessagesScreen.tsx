@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { getAndClearMessagesOpenedFromHome } from '../navigation/messagesFromHome';
 import { colors, spacing, borderRadius, typography } from '../theme';
 import { ThreadRow } from '../components';
 import { MOCK_THREADS } from '../data/mockThreads';
@@ -22,10 +23,19 @@ type MessagesStackParamList = {
 
 export function MessagesScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MessagesStackParamList>>();
+  const [showBackButton, setShowBackButton] = useState(false);
   const [search, setSearch] = useState('');
   const threads = MOCK_THREADS.filter((t) =>
     t.username.toLowerCase().includes(search.toLowerCase())
   );
+
+  useEffect(() => {
+    setShowBackButton(getAndClearMessagesOpenedFromHome());
+  }, []);
+
+  const handleBackToHome = useCallback(() => {
+    (navigation.getParent() as any)?.navigate('Home');
+  }, [navigation]);
 
   const handleThreadPress = (thread: Thread) => {
     navigation.navigate('ChatThread', {
@@ -40,7 +50,19 @@ export function MessagesScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Messages</Text>
+      {showBackButton ? (
+        <View style={styles.pageHeader}>
+          <View style={styles.pageHeaderRow}>
+            <TouchableOpacity onPress={handleBackToHome} style={styles.backTouchable} activeOpacity={0.7}>
+              <Text style={styles.backArrow}>←</Text>
+            </TouchableOpacity>
+            <Text style={styles.pageHeaderTitle}>Messages</Text>
+          </View>
+          <View style={styles.pageHeaderLine} />
+        </View>
+      ) : (
+        <Text style={styles.title}>Messages</Text>
+      )}
       <View style={styles.searchRow}>
         <View style={styles.searchIconWrap}>
           <Text style={styles.searchIcon}>🔍</Text>
@@ -89,6 +111,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  pageHeader: {
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  pageHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backTouchable: {
+    paddingVertical: spacing.sm,
+    paddingRight: spacing.sm,
+  },
+  backArrow: {
+    fontSize: 24,
+    color: colors.text,
+    fontWeight: '400',
+  },
+  pageHeaderTitle: {
+    ...typography.h3,
+    color: colors.text,
+    flex: 1,
+  },
+  pageHeaderLine: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginTop: spacing.sm,
   },
   title: {
     ...typography.h1,

@@ -15,6 +15,85 @@ type PaymentsParams = {
 const AMOUNTS = [25, 50, 100];
 const PAYMENT_METHODS = ['Venmo', 'Zelle', 'Card', 'Cash'];
 
+const LOGO_SIZE = 36;
+
+function VenmoLogo({ selected }: { selected: boolean }) {
+  const bg = selected ? colors.white : colors.venmo;
+  const fg = selected ? colors.venmo : colors.white;
+  return (
+    <View style={[logoStyles.brandLogo, { backgroundColor: bg }]}>
+      <Text style={[logoStyles.brandLetter, { color: fg }]}>V</Text>
+    </View>
+  );
+}
+
+function ZelleLogo({ selected }: { selected: boolean }) {
+  const bg = selected ? colors.white : colors.zelle;
+  const fg = selected ? colors.zelle : colors.white;
+  return (
+    <View style={[logoStyles.brandLogo, { backgroundColor: bg }]}>
+      <Text style={[logoStyles.brandLetter, { color: fg }]}>Z</Text>
+    </View>
+  );
+}
+
+function CardLogo({ selected }: { selected: boolean }) {
+  const color = selected ? colors.white : colors.text;
+  return (
+    <View style={[logoStyles.cardIcon, { borderColor: color }]}>
+      <View style={[logoStyles.cardStripe, { backgroundColor: color }]} />
+      <Text style={[logoStyles.cardText, { color }]}>••••</Text>
+    </View>
+  );
+}
+
+function CashLogo({ selected }: { selected: boolean }) {
+  return (
+    <Text style={[logoStyles.emojiLogo, selected && { opacity: 1 }]}>💵</Text>
+  );
+}
+
+const logoStyles = StyleSheet.create({
+  brandLogo: {
+    width: LOGO_SIZE,
+    height: LOGO_SIZE,
+    borderRadius: LOGO_SIZE / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xs,
+  },
+  brandLetter: {
+    fontSize: 22,
+    fontWeight: '700',
+  },
+  cardIcon: {
+    width: LOGO_SIZE,
+    height: LOGO_SIZE * 0.65,
+    borderRadius: 4,
+    borderWidth: 2,
+    marginBottom: spacing.xs,
+    justifyContent: 'flex-end',
+    padding: 4,
+  },
+  cardStripe: {
+    position: 'absolute',
+    top: 6,
+    left: 4,
+    right: 4,
+    height: 8,
+    borderRadius: 2,
+    opacity: 0.6,
+  },
+  cardText: {
+    fontSize: 10,
+    letterSpacing: 1,
+  },
+  emojiLogo: {
+    fontSize: LOGO_SIZE,
+    marginBottom: spacing.xs,
+  },
+});
+
 export function PaymentsScreen() {
   const route = useRoute<RouteProp<PaymentsParams, 'Payments'>>();
   const params = route.params ?? {};
@@ -109,6 +188,13 @@ export function PaymentsScreen() {
               label={method}
               selected={selectedMethod === method}
               onPress={() => setSelectedMethod(method)}
+              icon={
+                method === 'Venmo' ? <VenmoLogo selected={selectedMethod === 'Venmo'} /> :
+                method === 'Zelle' ? <ZelleLogo selected={selectedMethod === 'Zelle'} /> :
+                method === 'Card' ? <CardLogo selected={selectedMethod === 'Card'} /> :
+                method === 'Cash' ? <CashLogo selected={selectedMethod === 'Cash'} /> :
+                undefined
+              }
             />
           ))}
         </View>

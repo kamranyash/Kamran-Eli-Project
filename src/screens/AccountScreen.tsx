@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,19 +10,32 @@ import {
   Image,
   Platform,
 } from 'react-native';
-import * as DocumentPicker from 'expo-document-picker';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors, spacing, borderRadius, typography } from '../theme';
 import { PrimaryButton } from '../components';
+
+type HomeStackParamList = {
+  Account: undefined;
+  ResetPassword: undefined;
+};
 
 type PhotoItem = { id: string; label?: string; uri?: string };
 
 export function AccountScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
+  const fileInputRef = useRef<unknown>(null);
+  const profileFileInputRef = useRef<unknown>(null);
   const [skills, setSkills] = useState<string[]>(['Gardening', 'Lawn mowing', 'Landscaping']);
   const [newSkill, setNewSkill] = useState('');
   const [photos, setPhotos] = useState<PhotoItem[]>([
     { id: '1', label: 'Garden project' },
     { id: '2', label: 'Lawn care' },
   ]);
+  const [profilePhotoUri, setProfilePhotoUri] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState('Shayfer Gardening LLC');
+  const [email, setEmail] = useState('business@example.com');
+  const [phone, setPhone] = useState('(555) 123-4567');
 
   const handleAddSkill = () => {
     const trimmed = newSkill.trim();
@@ -39,36 +52,84 @@ export function AccountScreen() {
     setSkills((prev) => prev.filter((s) => s !== skill));
   };
 
-  const handleAddPhoto = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: 'image/*',
-        copyToCacheDirectory: true,
-      });
-      if (result.canceled) return;
-      const file = result.assets[0];
-      setPhotos((prev) => [
-        ...prev,
-        {
-          id: String(Date.now()),
-          label: file.name ?? `Work photo ${prev.length + 1}`,
-          uri: file.uri,
-        },
-      ]);
-    } catch (err) {
-      if (Platform.OS === 'web') {
-        Alert.alert(
-          'Add photo',
-          'Opening file picker failed. Make sure you’re allowing file access in your browser.'
-        );
-      } else {
-        Alert.alert('Error', 'Could not pick image. Please try again.');
+  const handleAddPhoto = () => {
+    if (Platform.OS === 'web' && typeof (globalThis as any).document !== 'undefined') {
+      const doc = (globalThis as any).document;
+      let input: any = fileInputRef.current;
+      if (!input) {
+        input = doc.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.style.display = 'none';
+        input.onchange = (e: any) => {
+          const target = e.target;
+          const file = target?.files?.[0];
+          if (file) {
+            const reader = new (globalThis as any).FileReader();
+            reader.onload = () => {
+              const uri = reader.result as string;
+              setPhotos((prev) => [
+                ...prev,
+                {
+                  id: String(Date.now()),
+                  label: file.name ?? `Work photo ${prev.length + 1}`,
+                  uri,
+                },
+              ]);
+            };
+            reader.readAsDataURL(file);
+          }
+          target.value = '';
+        };
+        doc.body.appendChild(input);
+        fileInputRef.current = input;
       }
+      input.click();
+    } else {
+      Alert.alert(
+        'Add photo',
+        'Open this app in a browser (npm run web) to add photos from your computer.'
+      );
     }
   };
 
   const handleRemovePhoto = (id: string) => {
     setPhotos((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const handleAddProfilePhoto = () => {
+    if (Platform.OS === 'web' && typeof (globalThis as any).document !== 'undefined') {
+      const doc = (globalThis as any).document;
+      let input: any = profileFileInputRef.current;
+      if (!input) {
+        input = doc.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.style.display = 'none';
+        input.onchange = (e: any) => {
+          const target = e.target;
+          const file = target?.files?.[0];
+          if (file) {
+            const reader = new (globalThis as any).FileReader();
+            reader.onload = () => setProfilePhotoUri(reader.result as string);
+            reader.readAsDataURL(file);
+          }
+          target.value = '';
+        };
+        doc.body.appendChild(input);
+        profileFileInputRef.current = input;
+      }
+      input.click();
+    } else {
+      Alert.alert(
+        'Profile picture',
+        'Open this app in a browser (npm run web) to add a profile picture.'
+      );
+    }
+  };
+
+  const handleResetPassword = () => {
+    navigation.navigate('ResetPassword');
   };
 
   return (
@@ -153,6 +214,63 @@ export function AccountScreen() {
             </View>
           ))}
         </View>
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Profile & account</Text>
+        <Text style={styles.hint}>Profile picture, name, contact info, and password.</Text>
+
+        <View style={styles.profilePictureRow}>
+          <TouchableOpacity onPress={handleAddProfilePhoto} style={styles.profilePictureWrap}>
+            {profilePhotoUri ? (
+              <Image
+                source={{ uri: profilePhotoUri }}
+                style={styles.profilePictureImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={styles.profilePicturePlaceholder}>
+                <Text style={styles.profilePictureIcon}>👤</Text>
+                <Text style={styles.profilePictureLabel}>Add photo</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          <Text style={styles.profilePictureHint}>Tap to change profile picture</Text>
+        </View>
+
+        <Text style={styles.fieldLabel}>Name / Business name</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Your name or business name"
+          placeholderTextColor={colors.textSecondary}
+          value={displayName}
+          onChangeText={setDisplayName}
+        />
+
+        <Text style={styles.fieldLabel}>Email</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          placeholderTextColor={colors.textSecondary}
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+
+        <Text style={styles.fieldLabel}>Phone</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Phone number"
+          placeholderTextColor={colors.textSecondary}
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
+        />
+
+        <TouchableOpacity onPress={handleResetPassword} style={styles.resetPasswordButton}>
+          <Text style={styles.resetPasswordText}>Reset password</Text>
+        </TouchableOpacity>
       </View>
 
       <PrimaryButton
@@ -328,6 +446,59 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     lineHeight: 20,
+  },
+  fieldLabel: {
+    ...typography.bodySmall,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: spacing.xs,
+    marginTop: spacing.md,
+  },
+  profilePictureRow: {
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  profilePictureWrap: {
+    marginBottom: spacing.sm,
+  },
+  profilePicturePlaceholder: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: colors.gray[200],
+    borderWidth: 2,
+    borderColor: colors.border,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profilePictureImage: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+  },
+  profilePictureIcon: {
+    fontSize: 32,
+    marginBottom: spacing.xs,
+  },
+  profilePictureLabel: {
+    ...typography.caption,
+    color: colors.textSecondary,
+  },
+  profilePictureHint: {
+    ...typography.caption,
+    color: colors.textSecondary,
+  },
+  resetPasswordButton: {
+    marginTop: spacing.lg,
+    paddingVertical: spacing.sm,
+    alignSelf: 'flex-start',
+  },
+  resetPasswordText: {
+    ...typography.body,
+    fontWeight: '600',
+    color: colors.primary,
+    textDecorationLine: 'underline',
   },
   saveButton: {
     marginTop: spacing.sm,

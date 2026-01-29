@@ -1,31 +1,44 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors, spacing, borderRadius, typography } from '../theme';
 import { MOCK_NOTIFICATIONS } from '../data/mockNotifications';
 import { useNotifications } from '../context/NotificationsContext';
 import type { Notification } from '../data/mockNotifications';
 
-function NotificationCard({ item }: { item: Notification }) {
+type HomeStackParamList = {
+  Notifications: undefined;
+  NotificationDetail: { notification: Notification };
+};
+
+function NotificationCard({
+  item,
+  isUnread,
+  onPress,
+}: {
+  item: Notification;
+  isUnread: boolean;
+  onPress: () => void;
+}) {
   return (
-    <View style={styles.card}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={onPress}
+      activeOpacity={0.8}
+    >
+      {isUnread && <View style={styles.unreadDot} />}
       <Text style={styles.title}>{item.title}</Text>
       <Text style={styles.message}>{item.message}</Text>
       <Text style={styles.timeAgo}>{item.timeAgo}</Text>
-    </View>
+    </TouchableOpacity>
   );
 }
 
 export function NotificationsScreen() {
-  const { markAllAsRead } = useNotifications();
+  const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
+  const { isRead } = useNotifications();
   const notifications = MOCK_NOTIFICATIONS;
-
-  // When user views this screen, mark all notifications as read so the bell badge goes to 0
-  useFocusEffect(
-    React.useCallback(() => {
-      markAllAsRead();
-    }, [markAllAsRead])
-  );
 
   return (
     <View style={styles.container}>
@@ -41,7 +54,13 @@ export function NotificationsScreen() {
           data={notifications}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
-          renderItem={({ item }) => <NotificationCard item={item} />}
+          renderItem={({ item }) => (
+            <NotificationCard
+              item={item}
+              isUnread={!isRead(item.id)}
+              onPress={() => navigation.navigate('NotificationDetail', { notification: item })}
+            />
+          )}
           showsVerticalScrollIndicator={false}
         />
       )}
@@ -68,6 +87,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
+    position: 'relative',
+  },
+  unreadDot: {
+    position: 'absolute',
+    top: spacing.sm,
+    left: spacing.sm,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.badge,
   },
   title: {
     ...typography.h3,

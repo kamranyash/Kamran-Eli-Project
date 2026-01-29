@@ -14,6 +14,8 @@ import { BookingCard, IconButton } from '../components';
 import { MOCK_BOOKINGS } from '../data/mockBookings';
 import { MOCK_BUSINESSES } from '../data/mockBusinesses';
 import { useNotifications } from '../context/NotificationsContext';
+import { setCalendarOpenedFromHome } from '../navigation/calendarFromHome';
+import { setMessagesOpenedFromHome } from '../navigation/messagesFromHome';
 import type { Booking } from '../data/mockBookings';
 
 const BUSINESS_NAME = 'Shayfer Gardening LLC';
@@ -56,6 +58,7 @@ export function HomeScreen() {
   }, [navigation]);
 
   const handleCalendar = useCallback(() => {
+    setCalendarOpenedFromHome(true);
     (navigation.getParent() as any)?.navigate('Calendar');
   }, [navigation]);
 
@@ -65,6 +68,11 @@ export function HomeScreen() {
     },
     [navigation]
   );
+
+  const handleMessages = useCallback(() => {
+    setMessagesOpenedFromHome(true);
+    (navigation.getParent() as any)?.navigate('Messages');
+  }, [navigation]);
 
   return (
     <ScrollView
@@ -79,10 +87,18 @@ export function HomeScreen() {
             <Text style={styles.switchLink}>Switch to personal</Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.topCenter}>
-          <Text style={styles.helper}>Click to view messages from clients</Text>
-        </View>
         <View style={styles.topRight}>
+          <IconButton
+            onPress={handleOpenProfile}
+            icon={
+              <View style={styles.profileIconWrap}>
+                <View style={styles.profileIconOuter}>
+                  <View style={styles.profileIconHead} />
+                  <View style={styles.profileIconShoulders} />
+                </View>
+              </View>
+            }
+          />
           <IconButton
             onPress={handleCalendar}
             icon={<Text style={styles.iconText}>📅</Text>}
@@ -92,7 +108,7 @@ export function HomeScreen() {
             icon={<Text style={styles.iconText}>🔔</Text>}
             badge={unreadCount > 0 ? unreadCount : undefined}
           />
-          <IconButton onPress={() => {}} icon={<Text style={styles.iconText}>💬</Text>} />
+          <IconButton onPress={handleMessages} icon={<Text style={styles.iconText}>💬</Text>} />
         </View>
       </View>
 
@@ -103,9 +119,7 @@ export function HomeScreen() {
           <Text style={styles.notifications}>
             {unreadCount === 0 ? 'No new notifications' : `${unreadCount} new notification${unreadCount === 1 ? '' : 's'}`}
           </Text>
-          <TouchableOpacity onPress={handleOpenProfile}>
-            <Text style={styles.profileLink}>Click to open profile</Text>
-          </TouchableOpacity>
+          <Text style={styles.profileHint}>Tap the profile icon above to open your account</Text>
         </View>
       </View>
 
@@ -191,6 +205,38 @@ const styles = StyleSheet.create({
   iconText: {
     fontSize: 22,
   },
+  profileIconWrap: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileIconOuter: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2.5,
+    borderColor: colors.black,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: 4,
+    overflow: 'hidden',
+  },
+  profileIconHead: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.black,
+  },
+  profileIconShoulders: {
+    width: 18,
+    height: 12,
+    marginTop: 1.5,
+    borderBottomLeftRadius: 9,
+    borderBottomRightRadius: 9,
+    backgroundColor: colors.black,
+  },
   accountSection: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -214,10 +260,9 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: spacing.xs,
   },
-  profileLink: {
-    ...typography.link,
-    color: colors.primary,
-    textDecorationLine: 'underline',
+  profileHint: {
+    ...typography.caption,
+    color: colors.textSecondary,
   },
   sectionTitle: {
     ...typography.h2,
