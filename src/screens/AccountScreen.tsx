@@ -7,14 +7,19 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Image,
+  Platform,
 } from 'react-native';
+import * as DocumentPicker from 'expo-document-picker';
 import { colors, spacing, borderRadius, typography } from '../theme';
 import { PrimaryButton } from '../components';
+
+type PhotoItem = { id: string; label?: string; uri?: string };
 
 export function AccountScreen() {
   const [skills, setSkills] = useState<string[]>(['Gardening', 'Lawn mowing', 'Landscaping']);
   const [newSkill, setNewSkill] = useState('');
-  const [photos, setPhotos] = useState<{ id: string; label?: string }[]>([
+  const [photos, setPhotos] = useState<PhotoItem[]>([
     { id: '1', label: 'Garden project' },
     { id: '2', label: 'Lawn care' },
   ]);
@@ -34,23 +39,32 @@ export function AccountScreen() {
     setSkills((prev) => prev.filter((s) => s !== skill));
   };
 
-  const handleAddPhoto = () => {
-    Alert.alert(
-      'Add photo',
-      'In a full app you could choose from camera or gallery, or paste an image. For now a placeholder is added.',
-      [
-        { text: 'Cancel', style: 'cancel' },
+  const handleAddPhoto = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'image/*',
+        copyToCacheDirectory: true,
+      });
+      if (result.canceled) return;
+      const file = result.assets[0];
+      setPhotos((prev) => [
+        ...prev,
         {
-          text: 'Add placeholder',
-          onPress: () => {
-            setPhotos((prev) => [
-              ...prev,
-              { id: String(Date.now()), label: `Work photo ${prev.length + 1}` },
-            ]);
-          },
+          id: String(Date.now()),
+          label: file.name ?? `Work photo ${prev.length + 1}`,
+          uri: file.uri,
         },
-      ]
-    );
+      ]);
+    } catch (err) {
+      if (Platform.OS === 'web') {
+        Alert.alert(
+          'Add photo',
+          'Opening file picker failed. Make sure you’re allowing file access in your browser.'
+        );
+      } else {
+        Alert.alert('Error', 'Could not pick image. Please try again.');
+      }
+    }
   };
 
   const handleRemovePhoto = (id: string) => {
@@ -115,10 +129,20 @@ export function AccountScreen() {
           {photos.map((photo) => (
             <View key={photo.id} style={styles.photoCard}>
               <View style={styles.photoPlaceholder}>
-                <Text style={styles.photoPlaceholderText}>📷</Text>
-                <Text style={styles.photoLabel} numberOfLines={1}>
-                  {photo.label ?? 'Previous work'}
-                </Text>
+                {photo.uri ? (
+                  <Image
+                    source={{ uri: photo.uri }}
+                    style={styles.photoImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <>
+                    <Text style={styles.photoPlaceholderText}>📷</Text>
+                    <Text style={styles.photoLabel} numberOfLines={1}>
+                      {photo.label ?? 'Previous work'}
+                    </Text>
+                  </>
+                )}
               </View>
               <TouchableOpacity
                 onPress={() => handleRemovePhoto(photo.id)}
@@ -273,6 +297,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.border,
+    overflow: 'hidden',
+  },
+  photoImage: {
+    width: '100%',
+    height: '100%',
   },
   photoPlaceholderText: {
     fontSize: 40,
