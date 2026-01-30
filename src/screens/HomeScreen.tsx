@@ -13,6 +13,7 @@ import { colors, spacing, typography } from '../theme';
 import { BookingCard, IconButton } from '../components';
 import { MOCK_BOOKINGS } from '../data/mockBookings';
 import { useNotifications } from '../context/NotificationsContext';
+import { useAppMode } from '../context/AppModeContext';
 import { setCalendarOpenedFromHome } from '../navigation/calendarFromHome';
 import { setMessagesOpenedFromHome } from '../navigation/messagesFromHome';
 import type { Booking } from '../data/mockBookings';
@@ -33,9 +34,10 @@ export function HomeScreen() {
   const { unreadCount } = useNotifications();
   const [bookings] = useState(MOCK_BOOKINGS);
 
+  const { switchToConsumer } = useAppMode();
   const handleSwitchToPersonal = useCallback(() => {
-    Alert.alert('Coming soon', 'Consumer mode coming soon');
-  }, []);
+    switchToConsumer();
+  }, [switchToConsumer]);
 
   const handleOpenProfile = useCallback(() => {
     navigation.navigate('Account');
