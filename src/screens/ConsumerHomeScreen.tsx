@@ -22,22 +22,23 @@ export function ConsumerHomeScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<ConsumerHomeStackParamList>>();
   const { switchToBusiness } = useAppMode();
 
-  const tabNav = (navigation.getParent() as any)?.getParent?.();
+  // Parent of the Home stack is the Tab navigator
+  const tabNav = navigation.getParent() as any;
 
   const openJobs = useCallback(() => {
-    tabNav?.navigate?.('ConsumerJobsTab');
+    tabNav?.navigate('ConsumerJobsTab');
   }, [tabNav]);
 
   const openProviders = useCallback(() => {
-    tabNav?.navigate?.('ConsumerProvidersTab');
+    tabNav?.navigate('ConsumerProvidersTab');
   }, [tabNav]);
 
   const openMessages = useCallback(() => {
-    tabNav?.navigate?.('ConsumerMessagesTab');
+    tabNav?.navigate('ConsumerMessagesTab');
   }, [tabNav]);
 
   const openAppointments = useCallback(() => {
-    tabNav?.navigate?.('ConsumerAppointmentsTab');
+    tabNav?.navigate('ConsumerAppointmentsTab');
   }, [tabNav]);
 
   const openJobDetail = useCallback(
